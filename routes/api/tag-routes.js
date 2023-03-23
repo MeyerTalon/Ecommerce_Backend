@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Needs fixing, stops server when no data is found
 router.get('/:id', async (req, res) => {
   try {
     const tagData = await Tag.findByPk(req.params.id ,{
@@ -41,14 +42,10 @@ router.post('/', async (req, res) => {
         };
       });
       const tagProductIds = await ProductTag.bulkCreate(productTagIdArr);
-    }
-  
-    if (!tagProductIds) {
+      res.status(200).json(tagProductIds);
+    } else {
       res.status(200).json(tagData);
-      return;
     }
-  
-    res.status(200).json(tagProductIds);
   } catch (err) {
     res.status(500).json(err);
   }
