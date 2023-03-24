@@ -3,6 +3,7 @@ const { Tag, Product, ProductTag } = require('../../models');
 
 // The `/api/tags` endpoint
 
+// gets all tags
 router.get('/', async (req, res) => {
   try {
     const tagData = await Tag.findAll({
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Needs fixing, stops server when no data is found
+// gets one tag by its id
 router.get('/:id', async (req, res) => {
   try {
     const tagData = await Tag.findByPk(req.params.id ,{
@@ -32,6 +33,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// creates a new tag
 router.post('/', async (req, res) => {
   try {
     const tagData = await Tag.create(req.body);
@@ -53,6 +55,7 @@ router.post('/', async (req, res) => {
   }
 });
 
+// updates a tag by its id
 router.put('/:id', (req, res) => {
   Tag.update(req.body, {
     where: {
@@ -63,9 +66,7 @@ router.put('/:id', (req, res) => {
       return ProductTag.findAll({ where: { tag_id: req.params.id } });
     })
     .then((productTags) => {
-      // get list of current tag_ids
       const productTagIds = productTags.map(({ product_id }) => product_id);
-      // create filtered list of new tag_ids
       const newProductTags = req.body.productIds
         .filter((product_id) => !productTagIds.includes(product_id))
         .map((product_id) => {
@@ -74,12 +75,10 @@ router.put('/:id', (req, res) => {
             product_id,
           };
         });
-      // figure out which ones to remove
       const productTagsToRemove = productTags
         .filter(({ product_id }) => !req.body.productIds.includes(product_id))
         .map(({ id }) => id);
 
-      // run both actions
       return Promise.all([
         ProductTag.destroy({ where: { id: productTagsToRemove } }),
         ProductTag.bulkCreate(newProductTags),
@@ -87,13 +86,12 @@ router.put('/:id', (req, res) => {
     })
     .then((updatedProductTags) => res.json(updatedProductTags))
     .catch((err) => {
-      // console.log(err);
       res.status(400).json(err);
     });
 });
 
+// deletes a tag by its id
 router.delete('/:id', async (req, res) => {
-  // delete on tag by its `id` value
   try {
     const tagData = await Tag.destroy({
       where: {
